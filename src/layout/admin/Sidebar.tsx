@@ -13,6 +13,7 @@ import {
   LuChevronDown,
   LuListChecks,
   LuShoppingCart,
+  LuSettings,
 } from "react-icons/lu";
 
 import { getStoredUser, clearAuthSession } from "../../utils/auth";
@@ -85,6 +86,13 @@ const NAV_ITEMS: NavItem[] = [
     icon: <LuFolderTree size={20} />,
   },
   {
+    id: "Product",
+    label: "Products",
+    path: ROUTES.products,
+    activePaths: [ROUTES.products],
+    icon: <LuPackage size={20} />,
+  },
+  {
     id: "variants",
     label: "Variants",
     icon: <MdLayers size={20} />,
@@ -105,19 +113,27 @@ const NAV_ITEMS: NavItem[] = [
       },
     ],
   },
+
   {
-    id: "Product",
-    label: "Products",
-    path: ROUTES.products,
-    activePaths: [ROUTES.products],
-    icon: <LuPackage size={20} />,
-  },
-  {
-    id: "CartSettings",
-    label: "Cart Settings",
-    path: ROUTES.cartSettings,
-    activePaths: [ROUTES.cartSettings],
-    icon: <LuShoppingCart size={20} />,
+    id: "settings",
+    label: "Settings",
+    icon: <LuSettings size={20} />,
+    children: [
+      {
+        id: "CartSettings",
+        label: "Cart Settings",
+        path: ROUTES.cartSettings,
+        activePaths: [ROUTES.cartSettings],
+        icon: <LuShoppingCart size={20} />,
+      },
+      // {
+      //   id: "wallet-settings",
+      //   label: "Wallet",
+      //   path: ROUTES.walletSettings,
+      //   activePaths: [ROUTES.walletSettings, "/admin/wallet-settings"],
+      //   icon: <LuWallet size={18} />,
+      // },
+    ],
   },
   // {
   //   id: "Orders",

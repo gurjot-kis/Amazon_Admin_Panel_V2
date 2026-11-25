@@ -1,5 +1,3 @@
-// ProductList.tsx — full updated file
-
 import { useEffect, useMemo, useState, useRef } from "react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
@@ -339,7 +337,7 @@ const ProductList = () => {
       cellClassName: "d-none d-md-table-cell",
       render: (p) => (
         <div className="pl-sku-cell">
-          <span className="pl-sku-badge">{p.sku}</span>
+          {!p.hasVariants && <span className="pl-sku-badge">{p.sku}</span>}
           {p.hasVariants && (
             <span className="pl-variants-pill">
               <svg width="11" height="11" viewBox="0 0 24 24" fill="none">
@@ -374,9 +372,22 @@ const ProductList = () => {
       cellClassName: "d-none d-md-table-cell",
       render: (p) => (
         <div className="pl-price-cell">
-          <span className="pl-price-selling">
-            {fmt(p.sellingPrice, p.currency)}
-          </span>
+          {p.hasVariants ? (
+            p.priceRange ? (
+              <span className="pl-price-selling">
+                {fmt(p.priceRange.min, p.currency)}
+                {p.priceRange.min !== p.priceRange.max && (
+                  <> – {fmt(p.priceRange.max, p.currency)}</>
+                )}
+              </span>
+            ) : (
+              <span className="pl-price-variants">See variants</span>
+            )
+          ) : (
+            <span className="pl-price-selling">
+              {p.sellingPrice != null ? fmt(p.sellingPrice, p.currency) : "—"}
+            </span>
+          )}
         </div>
       ),
     },
@@ -403,7 +414,7 @@ const ProductList = () => {
             type="button"
             className="cl-icon-btn cl-icon-btn--info"
             title="Details"
-            onClick={()=> navigate(`/admin/products/${p._id}/details`)}
+            onClick={() => navigate(`/admin/products/${p._id}/details`)}
           >
             <FiEye color="#2563EB" />
           </button>
@@ -456,11 +467,11 @@ const ProductList = () => {
               setPage(1);
             },
             options: [
-              { value: "all", label: "All statuses" },
-              { value: "active", label: "Active" },
-              { value: "inactive", label: "Inactive" },
-              { value: "pending", label: "Pending" },
-              { value: "rejected", label: "Rejected" },
+              { value: "all", label: "All status", badgeDot: "#94a3b8" },
+              { value: "active", label: "Active", badgeDot: "#16a34a" },
+              { value: "inactive", label: "Inactive", badgeDot: "#64748b" },
+              { value: "pending", label: "Pending", badgeDot: "#d97706" },
+              { value: "rejected", label: "Rejected", badgeDot: "#e11d48" },
             ],
           },
         ]}

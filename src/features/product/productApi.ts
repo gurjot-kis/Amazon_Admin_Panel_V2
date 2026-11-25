@@ -63,13 +63,22 @@ export const productApi = baseApi.injectEndpoints({
           if (data.short_description)
             formData.append("short_description", data.short_description);
           formData.append("category_id", data.category_id);
-          formData.append("sku", data.sku);
-          formData.append("currency", data.currency);
-          formData.append("costPrice", String(data.costPrice));
-          formData.append("sellingPrice", String(data.sellingPrice));
-          formData.append("price", String(data.price));
+
+          // optional for variant products
+          if (data.sku) formData.append("sku", data.sku);
+          if (data.currency) formData.append("currency", data.currency);
+          if (data.costPrice !== undefined)
+            formData.append("costPrice", String(data.costPrice));
+          if (data.sellingPrice !== undefined)
+            formData.append("sellingPrice", String(data.sellingPrice));
+          if (data.price !== undefined)
+            formData.append("price", String(data.price));
           if (data.stock !== undefined)
             formData.append("stock", String(data.stock));
+
+          if (data.unit) {
+            formData.append("unit", data.unit);
+          }
 
           if (data.mainImage instanceof File) {
             formData.append("mainImage", data.mainImage);
@@ -154,6 +163,7 @@ export const productApi = baseApi.injectEndpoints({
           formData.append("category_id", data.category_id);
         }
 
+        // undefined (variant products) -> not sent -> backend removes them
         if (data.sku !== undefined) {
           formData.append("sku", data.sku);
         }
@@ -176,6 +186,10 @@ export const productApi = baseApi.injectEndpoints({
 
         if (data.stock !== undefined) {
           formData.append("stock", String(data.stock));
+        }
+
+        if (data.unit !== undefined) {
+          formData.append("unit", data.unit);
         }
 
         // Main image

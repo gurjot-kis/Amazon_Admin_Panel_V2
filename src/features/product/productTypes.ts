@@ -33,17 +33,20 @@ export interface Product {
   _id: string;
   name: string;
   mainImage: string;
-  sku: string;
-  currency: string;
-  costPrice: number;
-  sellingPrice: number;
-  price: number;
+  // sku / currency / prices are optional: variant products don't have them
+  sku?: string;
+  currency?: string;
+  costPrice?: number;
+  sellingPrice?: number;
+  price?: number;
   stock: number;
   stockStatus: StockStatus;
   status: ProductStatus;
   hasVariants: boolean;
   createdAt: string;
   category: ProductCategory;
+  unit?: string;
+  priceRange?: { min: number; max: number } | null;
 }
 
 export type GetProductsResponse = ApiResponse<Product[]>;
@@ -80,11 +83,12 @@ export interface CreateProductPayload {
   description?: string;
   short_description?: string;
   category_id: string;
-  sku: string;
-  currency: string;
-  costPrice: number;
-  sellingPrice: number;
-  price: number;
+  // required only when hasVariants is false
+  sku?: string;
+  currency?: string;
+  costPrice?: number;
+  sellingPrice?: number;
+  price?: number;
   stock?: number;
   mainImage: File | string;
   featuredImages?: File[];
@@ -92,6 +96,7 @@ export interface CreateProductPayload {
   variantTypes?: string[];
   variants?: CreateProductVariant[];
   imageGroupTypeId?: string | null;
+  unit?: string;
 }
 
 // ====================
@@ -132,7 +137,6 @@ export interface ProductVariant {
   stock: number;
   stockStatus: StockStatus;
   images: string[];
-
   status: "active" | "inactive";
   createdAt: string;
   updatedAt: string;
@@ -146,11 +150,13 @@ export interface ProductDetails {
   short_description: string;
   mainImage: string;
   featuredImages: string[];
-  sku: string;
-  currency: string;
-  costPrice: number;
-  sellingPrice: number;
-  price: number;
+  // optional: variant products don't have these at product level
+  sku?: string;
+  slug: string;
+  currency?: string;
+  costPrice?: number;
+  sellingPrice?: number;
+  price?: number;
   stock: number;
   stockStatus: StockStatus;
   status: ProductStatus;
@@ -158,11 +164,11 @@ export interface ProductDetails {
   role: "SuperAdmin" | "User" | "Vendor";
   hasVariants: boolean;
   variantTypes: ProductVariantType[];
-  createdAt: string;
-  updatedAt: string;
-  slug: string;
   variants: ProductVariant[];
   imageGroupTypeId?: string | null;
+  unit?: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export type GetProductByIdResponse = ApiResponse<ProductDetails>;
@@ -184,6 +190,7 @@ export interface UpdateProductPayload {
   variantTypes?: string[];
   variants?: CreateProductVariant[];
   imageGroupTypeId?: string | null;
+  unit?: string;
 }
 
 export interface UpdateProductStatusPayload {
