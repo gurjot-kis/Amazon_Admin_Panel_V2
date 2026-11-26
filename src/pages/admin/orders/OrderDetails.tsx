@@ -1,499 +1,542 @@
+import React, { useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 import {
-  FiArrowLeft,
-  FiClock,
-  FiPackage,
-  FiCreditCard,
-  FiCheckCircle,
-  FiAlertCircle,
-  FiFileText,
-  FiShoppingBag,
-} from "react-icons/fi";
-import { useGetOrderByIdQuery } from "../../../features/order/orderApi";
-import type {
-  OrderStatus,
-  PaymentStatus,
-} from "../../../features/order/orderTypes";
+  LuArrowLeft,
+  LuPhone,
+  LuMapPin,
+  LuCalendar,
+  LuCreditCard,
+  LuClock,
+  LuStore,
+  LuBox,
+  LuShoppingBag,
+  LuTruck,
+  LuPackage,
+} from "react-icons/lu";
+import { FiCheckCircle, FiXCircle } from "react-icons/fi";
+
+import {
+  useGetOrderByIdQuery,
+  useUpdateOrderStatusMutation,
+} from "../../../features/order/orderApi";
+import type { OrderStatus } from "../../../features/order/orderTypes";
+import { useHeader } from "../../../layout/LayoutContext";
 import "../../../styles/order/OrderDetails.css";
-import { FullScreenLoader } from "../../../components/common/FullScreenLoader";
 
-const API_ASSET_URL = import.meta.env.VITE_API_ASSET_URL || "";
+const ASSET_URL = import.meta.env.VITE_API_ASSET_URL as string;
 
-const ORDER_STATUS_MAP: Record<
+const resolveImage = (path?: string | null) => {
+  if (!path) return null;
+  return path.startsWith("http") ? path : `${ASSET_URL}${path}`;
+};
+
+const ORDER_STATUS_CONFIG: Record<
   OrderStatus,
-  { label: string; dot: string; bg: string; text: string; border: string }
+  {
+    label: string;
+    className: string;
+    dot: string;
+    icon: React.FC<{ size?: number }>;
+  }
 > = {
   payment_pending: {
     label: "Payment Pending",
-    dot: "#f59e0b",
-    bg: "#fffbeb",
-    text: "#92400e",
-    border: "#fde68a",
+    className: "od-status--amber",
+    dot: "#d97706",
+    icon: LuClock,
   },
-  pending: {
-    label: "Pending",
-    dot: "#f59e0b",
-    bg: "#fffbeb",
-    text: "#92400e",
-    border: "#fde68a",
+  placed: {
+    label: "Placed",
+    className: "od-status--blue",
+    dot: "#2563eb",
+    icon: LuShoppingBag,
   },
   confirmed: {
     label: "Confirmed",
-    dot: "#3b82f6",
-    bg: "#eff6ff",
-    text: "#1e40af",
-    border: "#bfdbfe",
-  },
-  processing: {
-    label: "Processing",
-    dot: "#8b5cf6",
-    bg: "#f5f3ff",
-    text: "#5b21b6",
-    border: "#ddd6fe",
+    className: "od-status--indigo",
+    dot: "#4f46e5",
+    icon: FiCheckCircle,
   },
   packed: {
     label: "Packed",
-    dot: "#06b6d4",
-    bg: "#ecfeff",
-    text: "#155e75",
-    border: "#a5f3fc",
+    className: "od-status--purple",
+    dot: "#9333ea",
+    icon: LuPackage,
   },
   shipped: {
     label: "Shipped",
-    dot: "#06b6d4",
-    bg: "#ecfeff",
-    text: "#155e75",
-    border: "#a5f3fc",
-  },
-  out_for_delivery: {
-    label: "Out for Delivery",
-    dot: "#f97316",
-    bg: "#fff7ed",
-    text: "#9a3412",
-    border: "#fed7aa",
+    className: "od-status--cyan",
+    dot: "#0891b2",
+    icon: LuTruck,
   },
   delivered: {
     label: "Delivered",
-    dot: "#10b981",
-    bg: "#ecfdf5",
-    text: "#065f46",
-    border: "#a7f3d0",
-  },
-  // completed: {
-  //   label: "Completed",
-  //   dot: "#10b981",
-  //   bg: "#ecfdf5",
-  //   text: "#065f46",
-  //   border: "#a7f3d0",
-  // },
-  returned: {
-    label: "Returned",
-    dot: "#64748b",
-    bg: "#f8fafc",
-    text: "#334155",
-    border: "#cbd5e1",
+    className: "od-status--green",
+    dot: "#16a34a",
+    icon: FiCheckCircle,
   },
   cancelled: {
     label: "Cancelled",
-    dot: "#ef4444",
-    bg: "#fef2f2",
-    text: "#991b1b",
-    border: "#fecaca",
+    className: "od-status--rose",
+    dot: "#e11d48",
+    icon: FiXCircle,
   },
 };
 
-const PAYMENT_STATUS_MAP: Record<
-  PaymentStatus,
-  { label: string; bg: string; text: string }
-> = {
-  paid: { label: "Paid", bg: "#ecfdf5", text: "#065f46" },
-  pending: { label: "Pending", bg: "#fffbeb", text: "#92400e" },
-  failed: { label: "Failed", bg: "#fef2f2", text: "#991b1b" },
-  refunded: { label: "Refunded", bg: "#f1f5f9", text: "#475569" },
-};
+const STEPS: OrderStatus[] = [
+  "placed",
+  "confirmed",
+  "packed",
+  "shipped",
+  "delivered",
+];
 
-const formatCurrency = (amount?: number) => {
-  return new Intl.NumberFormat("en-IN", {
+const fmt = (n: number, currency = "INR") =>
+  new Intl.NumberFormat("en-IN", {
     style: "currency",
-    currency: "INR",
+    currency,
     maximumFractionDigits: 0,
-  }).format(amount ?? 0);
-};
+  }).format(n);
 
-const formatDate = (dateStr?: string | null) => {
-  if (!dateStr) return "—";
-  return new Date(dateStr).toLocaleString("en-US", {
+const formatDateTime = (iso?: string | null) => {
+  if (!iso) return "—";
+  return new Date(iso).toLocaleString("en-IN", {
+    day: "2-digit",
     month: "short",
-    day: "numeric",
     year: "numeric",
     hour: "2-digit",
     minute: "2-digit",
   });
 };
 
-const resolveItemImage = (src?: string | null) => {
-  if (!src) return "";
-  if (src.startsWith("http://") || src.startsWith("https://")) return src;
-
-  // Appends VITE_API_ASSET_URL to relative paths
-  return `${API_ASSET_URL.replace(/\/+$/, "")}/${src.replace(/^\/+/, "")}`;
-};
-
-const OrderDetails = () => {
+const OrderDetails: React.FC = () => {
   const { orderId } = useParams<{ orderId: string }>();
   const navigate = useNavigate();
+  const { setHeaderConfig } = useHeader();
 
-  const { data, isLoading, isError, error, refetch } = useGetOrderByIdQuery(
-    orderId || "",
+  const { data, isLoading, isError, error } = useGetOrderByIdQuery(
+    orderId ?? "",
     { skip: !orderId },
   );
 
+  const [updateOrderStatus, { isLoading: isUpdating }] =
+    useUpdateOrderStatusMutation();
+
   const order = data?.data;
+
+  useEffect(() => {
+    setHeaderConfig({
+      title: order
+        ? `Order #${order._id.slice(-8).toUpperCase()}`
+        : "Order Details",
+      subtitle:
+        "Review order items, customer destination, and processing steps",
+    });
+  }, [setHeaderConfig, order]);
+
+  const handleStatusChange = async (nextStatus: OrderStatus) => {
+    if (!orderId) return;
+    if (nextStatus === "cancelled") {
+      const confirmed = window.confirm(
+        "Cancel this order? This will release reserved inventory and refund any received payments.",
+      );
+      if (!confirmed) return;
+    }
+
+    try {
+      await updateOrderStatus({ orderId, status: nextStatus }).unwrap();
+      toast.success("Order status updated", {
+        description: `Order is now marked as ${ORDER_STATUS_CONFIG[nextStatus]?.label ?? nextStatus}.`,
+      });
+    } catch (err: any) {
+      toast.error("Failed to update status", {
+        description: err?.data?.message || "Could not complete operation.",
+      });
+    }
+  };
 
   if (isLoading) {
     return (
-      <FullScreenLoader
-        title=" Loading Order Details"
-        subtitle="Preparing your summary and tracking info..."
-      />
+      <div className="od-state">
+        <div className="od-spinner" />
+        <p>Loading order details…</p>
+      </div>
     );
   }
 
   if (isError || !order) {
     return (
-      <div className="od-page-state">
-        <FiAlertCircle className="od-error-icon" />
+      <div className="od-state od-state--error">
+        <LuBox size={40} />
         <h3>Unable to load order</h3>
-        <p>
-          {error && "status" in error
-            ? `Error status: ${error.status}`
-            : "The requested order could not be found."}
-        </p>
-        <div className="od-state-actions">
-          <button
-            type="button"
-            className="od-btn od-btn--secondary"
-            onClick={() => navigate("/admin/orders")}
-          >
-            Back to Orders
-          </button>
-          <button
-            type="button"
-            className="od-btn od-btn--primary"
-            onClick={refetch}
-          >
-            Retry
-          </button>
-        </div>
+        <p>{(error as any)?.data?.message || "Order not found."}</p>
+        <button
+          type="button"
+          className="od-back-btn"
+          onClick={() => navigate(-1)}
+        >
+          <LuArrowLeft size={15} /> Go Back
+        </button>
       </div>
     );
   }
 
-  const currentStatusConfig =
-    ORDER_STATUS_MAP[order.status] || ORDER_STATUS_MAP.pending;
-  const currentPaymentConfig =
-    PAYMENT_STATUS_MAP[order.paymentStatus] || PAYMENT_STATUS_MAP.pending;
+  const statusCfg = ORDER_STATUS_CONFIG[order.status] || {
+    label: order.status,
+    className: "od-status--gray",
+    dot: "#64748b",
+    icon: LuBox,
+  };
+  const StatusIcon = statusCfg.icon;
+
+  const currentStepIdx = STEPS.indexOf(order.status);
+  const isCancelled = order.status === "cancelled";
+  const isPaid = order.paymentReceived === 1;
+
+  const breakdown = order.billBreakdown;
+  const itemsSubtotal = breakdown?.items_total ?? order.grandTotal ?? 0;
+  const finalGrandTotal = breakdown?.grandTotal ?? order.grandTotal ?? 0;
 
   return (
-    <div className="od-container">
-      {/* Top Bar Navigation */}
-      <header className="od-header">
-        <div className="od-header-left">
-          <button
-            type="button"
-            className="od-back-btn"
-            onClick={() => navigate("/admin/orders")}
-            title="Back to all orders"
-          >
-            <FiArrowLeft />
-          </button>
-          <div>
-            <div className="od-title-row">
-              <h1 className="od-title">{order.orderNumber}</h1>
-              <span
-                className="od-status-pill"
-                style={{
-                  backgroundColor: currentStatusConfig.bg,
-                  color: currentStatusConfig.text,
-                  borderColor: currentStatusConfig.border,
-                }}
-              >
-                <span
-                  className="od-status-dot"
-                  style={{ backgroundColor: currentStatusConfig.dot }}
-                />
-                {currentStatusConfig.label}
-              </span>
-            </div>
-            <p className="od-subtitle">
-              Placed on {formatDate(order.createdAt)} • Ref: {order._id}
-            </p>
-          </div>
-        </div>
-      </header>
+    <div className="od-page">
+      {/* ── Top Bar ── */}
+      <div className="od-header-bar">
+        <button
+          type="button"
+          className="od-back-btn"
+          onClick={() => navigate(-1)}
+        >
+          <LuArrowLeft size={16} /> Back to Orders
+        </button>
 
-      {/* Main Grid */}
-      <div className="od-grid">
-        {/* Left Column (Items & Status Timeline) */}
-        <div className="od-col-main">
-          {/* Order Items Table */}
-          <section className="od-card">
-            <div className="od-card-header">
-              <div className="od-card-title">
-                <FiPackage className="od-icon" />
-                <span>Order Items ({order.items.length})</span>
-              </div>
-            </div>
+        <div className="od-header-actions">
+          <span className={`od-status-badge ${statusCfg.className}`}>
+            <StatusIcon size={14} />
+            <span>{statusCfg.label}</span>
+          </span>
 
-            <div className="od-table-wrap">
-              <table className="od-table">
-                <thead>
-                  <tr>
-                    <th>Item Details</th>
-                    <th className="text-center">Qty</th>
-                    <th className="text-end">Unit Price</th>
-                    <th className="text-end">Total</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {order.items.map((item, idx) => {
-                    const imgUrl = resolveItemImage(item.snapshot.mainImage);
-                    return (
-                      <tr key={item.product_id || idx}>
-                        <td>
-                          <div className="od-item-info">
-                            <div className="od-item-thumb">
-                              {imgUrl ? (
-                                <img
-                                  src={imgUrl}
-                                  alt={item.snapshot.name}
-                                  onError={(e) => {
-                                    const target = e.currentTarget;
-                                    target.style.display = "none";
-                                    const fallback =
-                                      target.nextElementSibling as HTMLElement;
-                                    if (fallback)
-                                      fallback.classList.remove("d-none");
-                                  }}
-                                />
-                              ) : null}
-                              <span
-                                className={`od-thumb-fallback ${imgUrl ? "d-none" : ""}`}
-                              >
-                                <FiShoppingBag />
-                              </span>
-                            </div>
+          {order.status === "placed" && (
+            <button
+              type="button"
+              className="od-action-btn od-action-btn--primary"
+              disabled={isUpdating}
+              onClick={() => handleStatusChange("confirmed")}
+            >
+              Confirm Order
+            </button>
+          )}
 
-                            <div className="od-item-text">
-                              <div className="od-item-name">
-                                {item.snapshot.name}
-                              </div>
-                              {item.variant?.label && (
-                                <span className="od-variant-badge">
-                                  {item.variant.label}
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                        </td>
-                        <td className="text-center od-font-semibold">
-                          {item.quantity}
-                        </td>
-                        <td className="text-end od-text-muted">
-                          {formatCurrency(item.unitPrice)}
-                        </td>
-                        <td className="text-end od-font-semibold od-text-navy">
-                          {formatCurrency(item.lineTotal)}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </section>
+          {order.status === "confirmed" && (
+            <button
+              type="button"
+              className="od-action-btn od-action-btn--primary"
+              disabled={isUpdating}
+              onClick={() => handleStatusChange("packed")}
+            >
+              Mark Packed
+            </button>
+          )}
 
-          {/* Status Timeline */}
-          <section className="od-card">
-            <div className="od-card-header">
-              <div className="od-card-title">
-                <FiClock className="od-icon" />
-                <span>Order Activity Timeline</span>
-              </div>
-            </div>
+          {order.status === "packed" && (
+            <button
+              type="button"
+              className="od-action-btn od-action-btn--primary"
+              disabled={isUpdating}
+              onClick={() => handleStatusChange("shipped")}
+            >
+              Ship Order
+            </button>
+          )}
 
-            <div className="od-timeline">
-              {order.statusHistory && order.statusHistory.length > 0 ? (
-                order.statusHistory.map((history, i) => (
-                  <div key={i} className="od-timeline-item">
-                    <div className="od-timeline-marker">
-                      <FiCheckCircle />
-                    </div>
-                    <div className="od-timeline-content">
-                      <div className="od-timeline-top">
-                        <span className="od-timeline-status">
-                          {history.status
-                            ? history.status.replace(/_/g, " ").toUpperCase()
-                            : "N/A"}
-                        </span>
-                        <span className="od-timeline-date">
-                          {formatDate(history.changedAt)}
-                        </span>
-                      </div>
-                      <p className="od-timeline-note">{history.note}</p>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <p className="od-no-data">No timeline events recorded.</p>
-              )}
-            </div>
-          </section>
+          {order.status === "shipped" && (
+            <button
+              type="button"
+              className="od-action-btn od-action-btn--success"
+              disabled={isUpdating}
+              onClick={() => handleStatusChange("delivered")}
+            >
+              Mark Delivered
+            </button>
+          )}
 
-          {/* Cancellation Info (Conditional) */}
-          {order.status === "cancelled" && (
-            <section className="od-card od-card--cancelled">
-              <div className="od-card-header">
-                <div className="od-card-title od-text-danger">
-                  <FiAlertCircle className="od-icon" />
-                  <span>Cancellation Information</span>
-                </div>
-              </div>
-              <div className="od-cancel-grid">
-                <div className="od-cancel-item">
-                  <span className="od-cancel-label">Cancelled By</span>
-                  <span className="od-cancel-value od-capitalize">
-                    {order.cancellation.cancelledBy || "Unknown"}
-                  </span>
-                </div>
-                <div className="od-cancel-item">
-                  <span className="od-cancel-label">Cancelled At</span>
-                  <span className="od-cancel-value">
-                    {formatDate(order.cancellation.cancelledAt)}
-                  </span>
-                </div>
-                <div className="od-cancel-item od-cancel-item--full">
-                  <span className="od-cancel-label">Reason</span>
-                  <span className="od-cancel-value od-cancel-reason">
-                    {order.cancellation.reason ||
-                      "No cancellation reason provided."}
-                  </span>
-                </div>
-              </div>
-            </section>
+          {!isCancelled && order.status !== "delivered" && (
+            <button
+              type="button"
+              className="od-action-btn od-action-btn--danger"
+              disabled={isUpdating}
+              onClick={() => handleStatusChange("cancelled")}
+            >
+              Cancel
+            </button>
           )}
         </div>
+      </div>
 
-        {/* Right Column (Pricing, Payment & Metadata) */}
-        <div className="od-col-side">
-          {/* Pricing Summary */}
-          <section className="od-card">
+      {/* ── Progress Pipeline Tracker ── */}
+      <div className="od-card od-tracker-card">
+        <div className="od-tracker-meta">
+          <span className="od-tracker-id">
+            Order Reference: <strong>#{order._id.toUpperCase()}</strong>
+          </span>
+          <span className="od-tracker-date">
+            <LuCalendar size={13} /> Placed on {formatDateTime(order.createdAt)}
+          </span>
+        </div>
+
+        {isCancelled ? (
+          <div className="od-cancelled-banner">
+            <FiXCircle size={18} />
+            <div>
+              <strong>Order has been cancelled</strong>
+              <p>Fulfillment terminated and inventory restored to catalog.</p>
+            </div>
+          </div>
+        ) : (
+          <div className="od-stepper">
+            {STEPS.map((step, idx) => {
+              const isCompleted = currentStepIdx >= idx;
+              const isCurrent = currentStepIdx === idx;
+              const StepIcon = ORDER_STATUS_CONFIG[step]?.icon || LuBox;
+
+              return (
+                <div
+                  key={step}
+                  className={`od-step ${isCompleted ? "is-completed" : ""} ${isCurrent ? "is-current" : ""}`}
+                >
+                  <div className="od-step-node">
+                    <StepIcon size={14} />
+                  </div>
+                  <span className="od-step-title">
+                    {ORDER_STATUS_CONFIG[step]?.label ?? step}
+                  </span>
+                  {idx < STEPS.length - 1 && <div className="od-step-bar" />}
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* ── Main 2-Column Content ── */}
+      <div className="od-main-grid">
+        {/* Left Column: Order Items */}
+        <div className="od-left-col">
+          <div className="od-card">
             <div className="od-card-header">
-              <div className="od-card-title">
-                <FiCreditCard className="od-icon" />
-                <span>Payment & Pricing</span>
+              <div className="od-card-title-group">
+                <LuBox size={16} />
+                <h3 className="od-card-title">Purchased Items</h3>
               </div>
+              <span className="od-badge-count">
+                {order.totalItems} Items Total
+              </span>
             </div>
 
-            <div className="od-pricing-list">
-              <div className="od-pricing-row">
-                <span>Items Subtotal</span>
-                <span>{formatCurrency(order.pricing.itemsTotal)}</span>
-              </div>
-              <div className="od-pricing-row">
-                <span>Estimated Tax</span>
-                <span>{formatCurrency(order.pricing.taxAmount)}</span>
-              </div>
-              <div className="od-pricing-row">
-                <span>Delivery Fee</span>
-                <span>{formatCurrency(order.pricing.deliveryFee)}</span>
-              </div>
-              {order.pricing.discount > 0 && (
-                <div className="od-pricing-row od-pricing-row--discount">
-                  <span>Discount</span>
-                  <span>-{formatCurrency(order.pricing.discount)}</span>
+            <div className="od-items-list">
+              {order.items.map((item, i) => (
+                <div
+                  key={item.variant_id ?? `${item.product_id}-${i}`}
+                  className="od-item-row"
+                >
+                  <div className="od-item-img-frame">
+                    {item.mainImage ? (
+                      <img
+                        src={resolveImage(item.mainImage) || undefined}
+                        alt={item.name}
+                        className="od-item-img"
+                        onError={(e) =>
+                          (e.currentTarget.style.display = "none")
+                        }
+                      />
+                    ) : (
+                      <div className="od-item-img-placeholder">
+                        <LuBox size={16} />
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="od-item-content">
+                    <h4 className="od-item-name">{item.name}</h4>
+
+                    {item.variant && (
+                      <div className="od-variant-tags">
+                        <span className="od-sku-chip">{item.variant.sku}</span>
+                        {item.variant.options.map((opt) => (
+                          <span key={opt.name} className="od-option-chip">
+                            {opt.name}: <strong>{opt.value}</strong>
+                          </span>
+                        ))}
+                      </div>
+                    )}
+
+                    <div className="od-item-price-line">
+                      <span className="od-unit-price">
+                        {fmt(item.sellingPrice, item.currency)}
+                      </span>
+                      {item.price > item.sellingPrice && (
+                        <span className="od-strike-price">
+                          {fmt(item.price, item.currency)}
+                        </span>
+                      )}
+                      <span className="od-qty">× {item.quantity}</span>
+                    </div>
+                  </div>
+
+                  <div className="od-item-total">
+                    {fmt(item.itemTotal, item.currency)}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Financial & Bill Breakdown Summary */}
+            <div className="od-summary-section">
+              {breakdown && breakdown.price_total > breakdown.items_total && (
+                <div className="od-summary-row">
+                  <span>MRP Total</span>
+                  <span>{fmt(breakdown.price_total)}</span>
                 </div>
               )}
-              <div className="od-pricing-divider" />
-              <div className="od-pricing-row od-pricing-row--grand">
+
+              <div className="od-summary-row">
+                <span>Items Subtotal ({order.totalItems} items)</span>
+                <span>{fmt(itemsSubtotal)}</span>
+              </div>
+
+              {breakdown && breakdown.discount > 0 && (
+                <div className="od-summary-row od-summary-row--discount">
+                  <span>Item Discount</span>
+                  <span>−{fmt(breakdown.discount)}</span>
+                </div>
+              )}
+
+              {breakdown?.coupon?.applied && breakdown.coupon.discount > 0 && (
+                <div className="od-summary-row od-summary-row--discount">
+                  <span>
+                    Coupon Discount
+                    {breakdown.coupon.code ? ` (${breakdown.coupon.code})` : ""}
+                  </span>
+                  <span>−{fmt(breakdown.coupon.discount)}</span>
+                </div>
+              )}
+
+              {breakdown && breakdown.handling_charge > 0 && (
+                <div className="od-summary-row">
+                  <span>Handling Charge</span>
+                  <span>{fmt(breakdown.handling_charge)}</span>
+                </div>
+              )}
+
+              {breakdown && breakdown.small_cart_charge > 0 && (
+                <div className="od-summary-row">
+                  <span>Small Cart Charge</span>
+                  <span>{fmt(breakdown.small_cart_charge)}</span>
+                </div>
+              )}
+
+              <div className="od-summary-row">
+                <span>Delivery Charge</span>
+                {breakdown?.delivery_waived ||
+                !breakdown?.delivery_charge ||
+                breakdown.delivery_charge === 0 ? (
+                  <span className="od-free-chip">Free</span>
+                ) : (
+                  <span>{fmt(breakdown.delivery_charge)}</span>
+                )}
+              </div>
+
+              <div className="od-summary-divider" />
+              <div className="od-summary-row od-summary-total">
                 <span>Grand Total</span>
-                <span>{formatCurrency(order.pricing.grandTotal)}</span>
+                <span className="od-grand-price">{fmt(finalGrandTotal)}</span>
               </div>
             </div>
+          </div>
+        </div>
 
-            <div className="od-payment-meta">
-              <div className="od-meta-badge-row">
-                <span className="od-meta-tag">
-                  {order.paymentMethod?.toUpperCase() || "N/A"}
-                </span>
-                <span
-                  className="od-badge"
-                  style={{
-                    backgroundColor: currentPaymentConfig.bg,
-                    color: currentPaymentConfig.text,
-                  }}
-                >
-                  {currentPaymentConfig.label}
-                </span>
-              </div>
-
-              {order.payment_id?.transactionId && (
-                <div className="od-meta-line">
-                  <span>Transaction Ref:</span>
-                  <strong title={order.payment_id.transactionId}>
-                    {order.payment_id.transactionId}
-                  </strong>
-                </div>
-              )}
-            </div>
-          </section>
-
-          {/* Reference & Identifiers */}
-          <section className="od-card">
+        {/* Right Column: Cards */}
+        <div className="od-right-col">
+          {/* Store Origin Card */}
+          <div className="od-card">
             <div className="od-card-header">
-              <div className="od-card-title">
-                <FiFileText className="od-icon" />
-                <span>Order Meta & Links</span>
+              <div className="od-card-title-group">
+                <LuStore size={16} />
+                <h3 className="od-card-title">Fulfilling Store</h3>
               </div>
             </div>
+          </div>
 
-            <div className="od-info-list">
-              <div className="od-info-row">
-                <span className="od-info-label">Customer ID</span>
-                <span className="od-info-val od-mono" title={order.user}>
-                  {order.user}
-                </span>
+          {/* Customer & Shipping Destination */}
+          <div className="od-card">
+            <div className="od-card-header">
+              <div className="od-card-title-group">
+                <LuMapPin size={16} />
+                <h3 className="od-card-title">Customer Destination</h3>
               </div>
-              <div className="od-info-row">
-                <span className="od-info-label">Slot Booking ID</span>
-                <span
-                  className="od-info-val od-mono"
-                  title={order.slotBooking_id}
+            </div>
+            <div className="od-address-body">
+              <h4 className="od-recipient-name">
+                {order.shippingAddress?.fullName || "—"}
+              </h4>
+              <div className="od-address-text">
+                <p>{order.shippingAddress?.addressLine1}</p>
+                {order.shippingAddress?.addressLine2 && (
+                  <p>{order.shippingAddress.addressLine2}</p>
+                )}
+                {order.shippingAddress?.landmark && (
+                  <p className="od-landmark">
+                    Landmark: {order.shippingAddress.landmark}
+                  </p>
+                )}
+                <p>
+                  {order.shippingAddress?.city}, {order.shippingAddress?.state}{" "}
+                  - <strong>{order.shippingAddress?.pincode}</strong>
+                </p>
+                <p>{order.shippingAddress?.country}</p>
+              </div>
+
+              {order.shippingAddress?.phone && (
+                <a
+                  href={`tel:${order.shippingAddress.phone}`}
+                  className="od-contact-pill"
                 >
-                  {order.slotBooking_id}
-                </span>
-              </div>
-              <div className="od-info-row">
-                <span className="od-info-label">Address ID</span>
-                <span className="od-info-val od-mono" title={order.address_id}>
-                  {order.address_id}
-                </span>
-              </div>
-              {order.vendor_id && (
-                <div className="od-info-row">
-                  <span className="od-info-label">Assigned Vendor</span>
-                  <span className="od-info-val od-mono">{order.vendor_id}</span>
-                </div>
+                  <LuPhone size={13} /> {order.shippingAddress.phone}
+                </a>
               )}
             </div>
+          </div>
 
-            {order.notes && (
-              <div className="od-order-notes">
-                <span className="od-notes-label">Customer Instructions:</span>
-                <p>“{order.notes}”</p>
+          {/* Payment Information */}
+          <div className="od-card">
+            <div className="od-card-header">
+              <div className="od-card-title-group">
+                <LuCreditCard size={16} />
+                <h3 className="od-card-title">Payment Info</h3>
               </div>
-            )}
-          </section>
+            </div>
+            <div className="od-payment-body">
+              <div className="od-payment-row">
+                <span className="od-label">Payment Method</span>
+                <span className="od-method-tag">{order.paymentMethod}</span>
+              </div>
+              <div className="od-payment-row">
+                <span className="od-label">Payment Status</span>
+                <span
+                  className={`od-payment-chip ${isPaid ? "is-paid" : "is-pending"}`}
+                >
+                  <span className="od-dot" />
+                  {isPaid ? "Received / Settled" : "Pending Collection (COD)"}
+                </span>
+              </div>
+              <div className="od-payment-row">
+                <span className="od-label">Last Updated</span>
+                <span className="od-value">
+                  {formatDateTime(order.updatedAt)}
+                </span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>

@@ -21,8 +21,7 @@ import { CustomToaster } from "./components/common/CustomToaster";
 import ProductList from "./pages/admin/product/ProductList";
 import AddProduct from "./pages/admin/product/AddProduct";
 import ProductDetails from "./pages/admin/product/ProductDetails";
-import AllOrderList from "./pages/admin/orders/AllOrderList";
-import OrderDetails from "./pages/admin/orders/OrderDetails";
+
 import UserList from "./pages/admin/user/UserList";
 import VendorList from "./pages/admin/vendor/VendorList";
 import AddVendor from "./pages/admin/vendor/AddVendor";
@@ -37,6 +36,15 @@ import VariantOption from "./pages/admin/variant/VariantOption";
 import AddVariantOption from "./pages/admin/variant/AddVariantOption";
 import CartSettingsList from "./pages/admin/cart-settings/CartSettingsList";
 import CreateCartSettings from "./pages/admin/cart-settings/CreateCartSettings";
+import WalletSettings from "./pages/admin/wallet/WalletSettings";
+import AddWalletSettings from "./pages/admin/wallet/AddWalletSettings";
+import OrderList from "./pages/admin/orders/OrderList";
+import OrderDetails from "./pages/admin/orders/OrderDetails";
+import CouponList from "./pages/admin/coupon/CouponList";
+import AddCoupon from "./pages/admin/coupon/AddCoupon";
+import BannerList from "./pages/admin/banners/BannerList";
+import CreateBanner from "./pages/admin/banners/CreateBanner";
+import FaqList from "./pages/admin/faq/FaqList";
 
 function App() {
   return (
@@ -85,9 +93,6 @@ function App() {
             <Route path={ROUTES.productEdit} element={<AddProduct />} />
             <Route path={ROUTES.productDetails} element={<ProductDetails />} />
 
-            <Route path={ROUTES.orders} element={<AllOrderList />} />
-            <Route path={ROUTES.orderDetails} element={<OrderDetails />} />
-
             <Route path={ROUTES.profile} element={<ProfilePage />} />
             <Route path={ROUTES.users} element={<UserList />} />
 
@@ -97,12 +102,47 @@ function App() {
 
             <Route path={ROUTES.variantType} element={<VariantType />} />
             <Route path={ROUTES.variantOption} element={<VariantOption />} />
-            <Route path={ROUTES.addVariantOption} element={<AddVariantOption />} />
-            <Route path={ROUTES.editVariantOption} element={<AddVariantOption />} />
+            <Route
+              path={ROUTES.addVariantOption}
+              element={<AddVariantOption />}
+            />
+            <Route
+              path={ROUTES.editVariantOption}
+              element={<AddVariantOption />}
+            />
 
             <Route path={ROUTES.cartSettings} element={<CartSettingsList />} />
-            <Route path={ROUTES.addCartSettings} element={<CreateCartSettings />} />
-            <Route path={ROUTES.editCartSettings} element={<CreateCartSettings />} />
+            <Route
+              path={ROUTES.addCartSettings}
+              element={<CreateCartSettings />}
+            />
+            <Route
+              path={ROUTES.editCartSettings}
+              element={<CreateCartSettings />}
+            />
+
+            <Route path={ROUTES.walletSettings} element={<WalletSettings />} />
+            <Route
+              path={ROUTES.addWalletSetings}
+              element={<AddWalletSettings />}
+            />
+            <Route
+              path={ROUTES.editWalletSetings}
+              element={<AddWalletSettings />}
+            />
+
+            <Route path={ROUTES.orders} element={<OrderList />} />
+            <Route path={ROUTES.orderDetails} element={<OrderDetails />} />
+
+            <Route path={ROUTES.couponList} element={<CouponList />} />
+            <Route path={ROUTES.addCoupon} element={<AddCoupon />} />
+            <Route path={ROUTES.editCoupon} element={<AddCoupon />} />
+
+            <Route path={ROUTES.banners} element={<BannerList />} />
+            <Route path={ROUTES.addBanner} element={<CreateBanner />} />
+            <Route path={ROUTES.editBanner} element={<CreateBanner />} />
+
+            <Route path={ROUTES.faqlist} element={<FaqList />} />
 
             <Route path={ROUTES.support} element={<SupportPage />} />
           </Route>

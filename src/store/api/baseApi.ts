@@ -73,6 +73,10 @@ export const baseApi = createApi({
     "VariantType",
     "VariantOption",
     "CartSettings",
+    "Coupon",
+    "Banner",
+    "Faq",
+    "WalletSettings",
   ],
   endpoints: () => ({}),
 });

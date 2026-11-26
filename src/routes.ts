@@ -25,9 +25,6 @@ export const ROUTES = {
   addVariantOption: "/admin/variant-option/add",
   editVariantOption: "/admin/variant-option/:id/edit",
 
-  orders: "/admin/orders",
-  orderDetails: "/admin/orders/:orderId/details",
-
   users: "/admin/users",
   profile: "/admin/profile",
 
@@ -38,6 +35,23 @@ export const ROUTES = {
   cartSettings: "/admin/cart-settings",
   addCartSettings: "/admin/cart-settings/add",
   editCartSettings: "/admin/cart-settings/:id/edit",
+
+  walletSettings: "/admin/wallet-settings",
+  addWalletSetings: "/admin/wallet-settings/add",
+  editWalletSetings: "/admin/wallet-settings/:id/edit",
+
+  couponList: "/admin/coupons",
+  addCoupon: "/admin/coupons/add",
+  editCoupon: "/admin/coupons/:id/edit",
+
+  banners: "/admin/banners",
+  addBanner: "/admin/banners/add",
+  editBanner: "/admin/banners/:id/edit",
+
+  orders: "/admin/orders",
+  orderDetails: "/admin/orders/:orderId/details",
+
+  faqlist: "/admin/faqs",
 
   support: "/admin/support",
   //Worked by kshitish end
@@ -53,6 +67,6 @@ export const VENDOR_ROUTES = {
   editSlot: "/vendor/slots/:slotId/edit",
 
   serviceList: "/vendor/services",
-  addService:"/vendor/services/add",
-  editService:"/vendor/services/:serviceId/edit"
+  addService: "/vendor/services/add",
+  editService: "/vendor/services/:serviceId/edit",
 } as const;

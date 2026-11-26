@@ -14,6 +14,10 @@ import {
   LuListChecks,
   LuShoppingCart,
   LuSettings,
+  LuWallet,
+  LuTicketPercent,
+  LuImages,
+  LuCircleHelp,
 } from "react-icons/lu";
 
 import { getStoredUser, clearAuthSession } from "../../utils/auth";
@@ -71,13 +75,13 @@ const NAV_ITEMS: NavItem[] = [
   //   activePaths: [ROUTES.vendors],
   //   icon: <LuStore size={20} />,
   // },
-  // {
-  //   id: "Users",
-  //   label: "Users",
-  //   path: ROUTES.users,
-  //   activePaths: [ROUTES.users],
-  //   icon: <LuUsers size={20} />,
-  // },
+  {
+    id: "Users",
+    label: "Users",
+    path: ROUTES.users,
+    activePaths: [ROUTES.users],
+    icon: <LuUsers size={20} />,
+  },
   {
     id: "Category",
     label: "Categories",
@@ -92,6 +96,39 @@ const NAV_ITEMS: NavItem[] = [
     activePaths: [ROUTES.products],
     icon: <LuPackage size={20} />,
   },
+
+  {
+    id: "Orders",
+    label: "Orders",
+    path: ROUTES.orders,
+    activePaths: [ROUTES.orders],
+    icon: <LuPackage size={20} />,
+  },
+
+  {
+    id: "Coupons",
+    label: "Coupons",
+    path: ROUTES.couponList,
+    activePaths: [ROUTES.couponList],
+    icon: <LuTicketPercent size={20} />,
+  },
+
+  {
+    id: "Banners",
+    label: "Banners",
+    path: ROUTES.banners,
+    activePaths: [ROUTES.banners],
+    icon: <LuImages size={20} />,
+  },
+
+  {
+    id: "FAQs",
+    label: "FAQs",
+    path: ROUTES.faqlist,
+    activePaths: [ROUTES.faqlist],
+    icon: <LuCircleHelp size={20} />,
+  },
+
   {
     id: "variants",
     label: "Variants",
@@ -126,22 +163,16 @@ const NAV_ITEMS: NavItem[] = [
         activePaths: [ROUTES.cartSettings],
         icon: <LuShoppingCart size={20} />,
       },
-      // {
-      //   id: "wallet-settings",
-      //   label: "Wallet",
-      //   path: ROUTES.walletSettings,
-      //   activePaths: [ROUTES.walletSettings, "/admin/wallet-settings"],
-      //   icon: <LuWallet size={18} />,
-      // },
+      {
+        id: "wallet-settings",
+        label: "Wallet",
+        path: ROUTES.walletSettings,
+        activePaths: [ROUTES.walletSettings, "/admin/wallet-settings"],
+        icon: <LuWallet size={18} />,
+      },
     ],
   },
-  // {
-  //   id: "Orders",
-  //   label: "Orders",
-  //   path: ROUTES.orders,
-  //   activePaths: [ROUTES.orders],
-  //   icon: <LuShoppingBag size={20} />,
-  // },
+
   // {
   //   id: "Support",
   //   label: "Support",
