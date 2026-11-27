@@ -125,7 +125,10 @@ const ProductDetails: React.FC = () => {
     const assets: GalleryAsset[] = [];
     const seen = new Set<string>();
 
-    if (Array.isArray(product.featuredImages)) {
+    if (
+      Array.isArray(product.featuredImages) &&
+      product.featuredImages.length > 0
+    ) {
       product.featuredImages.forEach((img, idx) => {
         if (img && !seen.has(img)) {
           seen.add(img);
@@ -135,6 +138,12 @@ const ProductDetails: React.FC = () => {
             label: `Featured #${idx + 1}`,
           });
         }
+      });
+    } else if (product.mainImage) {
+      assets.push({
+        url: product.mainImage,
+        source: "main",
+        label: "Main Image",
       });
     }
 

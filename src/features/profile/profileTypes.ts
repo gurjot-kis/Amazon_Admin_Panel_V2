@@ -3,6 +3,7 @@ export interface AdminProfile {
   user_id: string;
   fullName: string;
   email: string;
+  countryCode?: string;
   phone: string;
   address: string;
   profilePicture: string;

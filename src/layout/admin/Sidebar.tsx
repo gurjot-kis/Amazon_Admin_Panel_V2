@@ -18,6 +18,8 @@ import {
   LuTicketPercent,
   LuImages,
   LuCircleHelp,
+  LuArrowUpRight,
+  LuChevronRight,
 } from "react-icons/lu";
 
 import { getStoredUser, clearAuthSession } from "../../utils/auth";
@@ -53,6 +55,10 @@ interface StoredUser {
   profilePicture?: string;
 }
 
+// Replace `ROUTES.stores` if your route key is named `ROUTES.store`
+const STORE_ROUTE = ROUTES.store ?? "/admin/stores";
+const STORE_ACTIVE_PATHS = [STORE_ROUTE, "/admin/stores", "/admin/store"];
+
 const NAV_ITEMS: NavItem[] = [
   {
     id: "Dashboard",
@@ -68,13 +74,6 @@ const NAV_ITEMS: NavItem[] = [
     activePaths: [ROUTES.profile],
     icon: <LuUserRound size={20} />,
   },
-  // {
-  //   id: "Vendors",
-  //   label: "Vendors",
-  //   path: ROUTES.vendors,
-  //   activePaths: [ROUTES.vendors],
-  //   icon: <LuStore size={20} />,
-  // },
   {
     id: "Users",
     label: "Users",
@@ -96,15 +95,13 @@ const NAV_ITEMS: NavItem[] = [
     activePaths: [ROUTES.products],
     icon: <LuPackage size={20} />,
   },
-
   {
     id: "Orders",
     label: "Orders",
     path: ROUTES.orders,
     activePaths: [ROUTES.orders],
-    icon: <LuPackage size={20} />,
+    icon: <LuShoppingBag size={20} />,
   },
-
   {
     id: "Coupons",
     label: "Coupons",
@@ -112,7 +109,6 @@ const NAV_ITEMS: NavItem[] = [
     activePaths: [ROUTES.couponList],
     icon: <LuTicketPercent size={20} />,
   },
-
   {
     id: "Banners",
     label: "Banners",
@@ -120,7 +116,6 @@ const NAV_ITEMS: NavItem[] = [
     activePaths: [ROUTES.banners],
     icon: <LuImages size={20} />,
   },
-
   {
     id: "FAQs",
     label: "FAQs",
@@ -128,7 +123,6 @@ const NAV_ITEMS: NavItem[] = [
     activePaths: [ROUTES.faqlist],
     icon: <LuCircleHelp size={20} />,
   },
-
   {
     id: "variants",
     label: "Variants",
@@ -150,7 +144,6 @@ const NAV_ITEMS: NavItem[] = [
       },
     ],
   },
-
   {
     id: "settings",
     label: "Settings",
@@ -172,14 +165,6 @@ const NAV_ITEMS: NavItem[] = [
       },
     ],
   },
-
-  // {
-  //   id: "Support",
-  //   label: "Support",
-  //   path: ROUTES.support,
-  //   activePaths: [ROUTES.support],
-  //   icon: <LuLifeBuoy size={20} />,
-  // },
 ];
 
 export default function Sidebar(): React.ReactElement {
@@ -221,6 +206,8 @@ export default function Sidebar(): React.ReactElement {
     clearAuthSession();
     navigate(ROUTES.login, { replace: true });
   };
+
+  const isStoreActive = STORE_ACTIVE_PATHS.some((p) => pathname.startsWith(p));
 
   return (
     <>
@@ -274,6 +261,30 @@ export default function Sidebar(): React.ReactElement {
 
         {/* Navigation Section */}
         <div className="sidebar-nav-wrapper">
+          <div className="sidebar-store-section">
+            <button
+              type="button"
+              className={`sidebar-store-card ${isStoreActive ? "sidebar-store-card-active" : ""}`}
+              onClick={() => handleNavClick(STORE_ROUTE)}
+            >
+              <span className="sidebar-store-glow" aria-hidden="true" />
+              <span className="sidebar-store-icon-box">
+                <LuStore size={19} />
+              </span>
+              <span className="sidebar-store-meta">
+                <span className="sidebar-store-title">My Store</span>
+                <span className="sidebar-store-subtitle">
+                  Manage your store details
+                </span>
+              </span>
+              <span className="sidebar-store-chevron">
+                <LuChevronRight size={16} />
+              </span>
+            </button>
+          </div>
+
+          <div className="sidebar-section-divider" />
+
           <span className="sidebar-nav-heading">Main Navigation</span>
           <nav className="sidebar-nav-list">
             {NAV_ITEMS.map((item) => {

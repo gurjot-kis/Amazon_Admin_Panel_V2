@@ -77,6 +77,7 @@ export const baseApi = createApi({
     "Banner",
     "Faq",
     "WalletSettings",
+    "Store",
   ],
   endpoints: () => ({}),
 });

@@ -458,14 +458,14 @@ const OrderDetails: React.FC = () => {
         {/* Right Column: Cards */}
         <div className="od-right-col">
           {/* Store Origin Card */}
-          <div className="od-card">
+          {/* <div className="od-card">
             <div className="od-card-header">
               <div className="od-card-title-group">
                 <LuStore size={16} />
                 <h3 className="od-card-title">Fulfilling Store</h3>
               </div>
             </div>
-          </div>
+          </div> */}
 
           {/* Customer & Shipping Destination */}
           <div className="od-card">

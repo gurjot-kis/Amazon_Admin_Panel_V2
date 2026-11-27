@@ -53,6 +53,10 @@ export const ROUTES = {
 
   faqlist: "/admin/faqs",
 
+  store: "/admin/store",
+  createStore: "/admin/store/add",
+  editStore: "/admin/store/edit",
+
   support: "/admin/support",
   //Worked by kshitish end
 } as const;

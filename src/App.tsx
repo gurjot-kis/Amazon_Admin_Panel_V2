@@ -7,7 +7,7 @@ import {
 import { VENDOR_ROUTES, ROUTES } from "./routes";
 import DashboardPage from "./pages/admin/DashboardPage";
 import ProfilePage from "./pages/admin/profile/ProfilePage";
-import SupportPage from "./pages/SupportPage";
+// import SupportPage from "./pages/SupportPage";
 import LoginPage from "./pages/LoginPage";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import VerifyOtpPage from "./pages/VerifyOtpPage";
@@ -45,6 +45,8 @@ import AddCoupon from "./pages/admin/coupon/AddCoupon";
 import BannerList from "./pages/admin/banners/BannerList";
 import CreateBanner from "./pages/admin/banners/CreateBanner";
 import FaqList from "./pages/admin/faq/FaqList";
+import Store from "./pages/admin/store/Store";
+import CreateStore from "./pages/admin/store/CreateStore";
 
 function App() {
   return (
@@ -144,7 +146,11 @@ function App() {
 
             <Route path={ROUTES.faqlist} element={<FaqList />} />
 
-            <Route path={ROUTES.support} element={<SupportPage />} />
+            <Route path={ROUTES.store} element={<Store />} />
+            <Route path={ROUTES.createStore} element={<CreateStore />} />
+            <Route path={ROUTES.editStore} element={<CreateStore />} />
+
+            {/* <Route path={ROUTES.support} element={<SupportPage />} /> */}
           </Route>
         </Route>
         <Route path="*" element={<Navigate to={ROUTES.login} replace />} />
